@@ -12,8 +12,8 @@ export class MediaRequestFormMapping {
   @PrimaryGeneratedColumn('increment')
   mediaRequestFormMappingId: number;
 
-  @Column({ type: 'int8' })
-  mediaRequestId: number;
+  @Column()
+  mediaRequestId: string;
 
   @ManyToOne(() => Form)
   form: Form;

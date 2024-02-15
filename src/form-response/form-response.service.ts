@@ -1,26 +1,88 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { FormResponse } from './entities/form-response.entity';
+import { DataSource, Repository } from 'typeorm';
+import { MediaRequestFormMapping } from 'src/media-request-form-mapping/entities/media-request-form-mapping.entity';
+import { InitialCreateFormResponseDto } from './dto/intiial-create-form-response.dto copy';
 import { CreateFormResponseDto } from './dto/create-form-response.dto';
-import { UpdateFormResponseDto } from './dto/update-form-response.dto';
+import { CommonProviderService } from 'src/common-provider/common-provider.service';
 
 @Injectable()
 export class FormResponseService {
-  create(createFormResponseDto: CreateFormResponseDto) {
-    return 'This action adds a new formResponse';
+  constructor(
+    @InjectRepository(FormResponse)
+    private formResponseRepository: Repository<FormResponse>,
+    private readonly commonProviderService: CommonProviderService,
+    private readonly dataSource: DataSource,
+  ) {}
+
+  async initialCreate(
+    initialCreateFormResponseDto: InitialCreateFormResponseDto,
+  ) {
+    const mediaRequestFormMappingIds =
+      initialCreateFormResponseDto.mediaRequestFormMappingIds;
+
+    const formData = (
+      await this.commonProviderService.findAllByIds(mediaRequestFormMappingIds)
+    ).map((each) => each.form.data);
+
+    const formResponses: FormResponse[] = [];
+
+    mediaRequestFormMappingIds.forEach(
+      async (mediaRequestFormMappingId, index) => {
+        formResponses.push(
+          this.formResponseRepository.create({
+            mediaRequestFormMapping: {
+              mediaRequestFormMappingId,
+            } as MediaRequestFormMapping,
+            data: formData[index],
+          }),
+        );
+      },
+    );
+
+    return await this.formResponseRepository.save(formResponses);
   }
 
-  findAll() {
-    return `This action returns all formResponse`;
+  async create(createFormResponseDto: CreateFormResponseDto) {
+    return await this.formResponseRepository.save({
+      data: createFormResponseDto.data,
+      mediaRequestFormMapping: {
+        mediaRequestFormMappingId:
+          createFormResponseDto.mediaRequestFormMappingId,
+      } as MediaRequestFormMapping,
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} formResponse`;
+  async findAll(mediaRequestId: string) {
+    // const responses = await this.formResponseRepository.find({
+    //   where: { mediaRequestFormMapping: { mediaRequestId } },
+    //   relations: { mediaRequestFormMapping: true },
+    // });
+
+    const responses = await this.dataSource
+      .getRepository(FormResponse)
+      .createQueryBuilder('fr')
+      .leftJoinAndSelect('fr.mediaRequestFormMapping', 'mrfm')
+      .where(`mrfm."mediaRequestId" = '${mediaRequestId}'`)
+      // .groupBy(`mrfm."mediaRequestFormMappingId"`)
+      .select('DISTINCT ON (mrfm."mediaRequestFormMappingId") mrfm.*')
+      .addSelect('fr.*')
+      .getRawMany();
+
+    // return this.dataSource
+    // .createQueryBuilder(Form, 'f')
+    // .where(`f."organizationId" = ${organizationId}`)
+    // .orderBy({
+    //   'f.formId': 'ASC',
+    //   'f.createdAt': 'DESC',
+    // })
+    // .select('DISTINCT ON (f."formId") f.*')
+    // .getRawMany();
+    return responses;
   }
 
-  update(id: number, updateFormResponseDto: UpdateFormResponseDto) {
-    return `This action updates a #${id} formResponse`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} formResponse`;
+  findOne(formResponseId: number) {
+    return this.formResponseRepository.findOne({ where: { formResponseId } });
   }
 }

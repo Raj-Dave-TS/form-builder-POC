@@ -8,5 +8,6 @@ import { Form } from './entities/form.entity';
   imports: [TypeOrmModule.forFeature([Form])],
   controllers: [FormController],
   providers: [FormService],
+  exports: [FormService],
 })
 export class FormModule {}

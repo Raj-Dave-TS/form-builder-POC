@@ -19,6 +19,8 @@ export class MediaRequestFormMappingController {
 
   @Get('/:mediaRequestId')
   findAll(@Param('mediaRequestId') mediaRequestId: string) {
-    return this.mediaRequestFormMappingService.findAll(+mediaRequestId);
+    return this.mediaRequestFormMappingService.findAllByMediaRequest(
+      mediaRequestId,
+    );
   }
 }

@@ -2,13 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { CreateFormDto } from './dto/create-form.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Form } from './entities/form.entity';
-import { Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { Organization } from 'src/organization/entities/organization.entity';
 
 @Injectable()
 export class FormService {
   constructor(
     @InjectRepository(Form) private formRepository: Repository<Form>,
+    private dataSource: DataSource,
   ) {}
 
   create(createFormDto: CreateFormDto) {
@@ -22,10 +23,17 @@ export class FormService {
   }
 
   findAllByOrganizationId(organizationId: number) {
-    return this.formRepository.find({
-      where: { organization: { organizationId } },
-    });
+    return this.dataSource
+      .createQueryBuilder(Form, 'f')
+      .where(`f."organizationId" = ${organizationId}`)
+      .orderBy({
+        'f.formId': 'ASC',
+        'f.createdAt': 'DESC',
+      })
+      .select('DISTINCT ON (f."formId") f.*')
+      .getRawMany();
   }
+
   async findAllByFormId(formId: number) {
     const data = await this.formRepository.findOne({
       where: { formId },
@@ -37,12 +45,19 @@ export class FormService {
   findAllVersionsByFomrId(formId: number) {
     return this.formRepository.find({
       where: { formId },
+      order: { createdAt: 'DESC' },
     });
   }
 
   findOne(formVersionId: number) {
     return this.formRepository.findOne({
       where: { formVersionId },
+    });
+  }
+
+  findAllByIds(formVersionIds: number[]) {
+    return this.formRepository.find({
+      where: { formVersionId: In(formVersionIds) },
     });
   }
 

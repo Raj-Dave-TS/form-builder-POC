@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -16,6 +17,7 @@ export class Form {
   formId: number;
 
   @ManyToOne(() => Organization, (organization) => organization.forms)
+  @JoinColumn({ name: 'organizationId' })
   organization: Organization;
 
   @Column({ type: 'text' })

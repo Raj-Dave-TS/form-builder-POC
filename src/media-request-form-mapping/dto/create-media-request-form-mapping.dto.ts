@@ -1,10 +1,10 @@
 // Dada KI Jay Ho
 
-import { IsArray, IsNumber } from 'class-validator';
+import { IsArray, IsString } from 'class-validator';
 
 export class CreateMediaRequestFormMappingDto {
-  @IsNumber()
-  mediaRequestId: number;
+  @IsString()
+  mediaRequestId: string;
 
   @IsArray()
   formVersionIds: number[];
