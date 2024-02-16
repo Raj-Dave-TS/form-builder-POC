@@ -55,30 +55,27 @@ export class FormResponseService {
   }
 
   async findAll(mediaRequestId: string) {
-    // const responses = await this.formResponseRepository.find({
-    //   where: { mediaRequestFormMapping: { mediaRequestId } },
-    //   relations: { mediaRequestFormMapping: true },
-    // });
+    const responses = await this.formResponseRepository.find({
+      where: { mediaRequestFormMapping: { mediaRequestId } },
+      relations: { mediaRequestFormMapping: true },
+    });
 
-    const responses = await this.dataSource
-      .getRepository(FormResponse)
-      .createQueryBuilder('fr')
-      .leftJoinAndSelect('fr.mediaRequestFormMapping', 'mrfm')
-      .where(`mrfm."mediaRequestId" = '${mediaRequestId}'`)
-      // .groupBy(`mrfm."mediaRequestFormMappingId"`)
-      .select('DISTINCT ON (mrfm."mediaRequestFormMappingId") mrfm.*')
-      .addSelect('fr.*')
-      .getRawMany();
+    // const responses = await this.dataSource
+    //   .getRepository(FormResponse)
+    //   .createQueryBuilder('fr')
+    //   .leftJoinAndSelect('fr.mediaRequestFormMapping', 'mrfm')
+    //   .where(`mrfm."mediaRequestId" = '${mediaRequestId}'`)
+    //   // .orderBy({
+    //   //   'fr.createdAt': 'DESC',
+    //   // })
+    //   .groupBy('mrfm."mediaRequestFormMappingId"')
+    //   .select('mrfm."mediaRequestFormMappingId"')
+    //   // .select(
+    //   //   'DISTINCT ON (mrfm."mediaRequestFormMappingId", fr."createdAt") mrfm.*',
+    //   // )
+    //   // .addSelect('fr.*')
+    //   .getRawMany();
 
-    // return this.dataSource
-    // .createQueryBuilder(Form, 'f')
-    // .where(`f."organizationId" = ${organizationId}`)
-    // .orderBy({
-    //   'f.formId': 'ASC',
-    //   'f.createdAt': 'DESC',
-    // })
-    // .select('DISTINCT ON (f."formId") f.*')
-    // .getRawMany();
     return responses;
   }
 
